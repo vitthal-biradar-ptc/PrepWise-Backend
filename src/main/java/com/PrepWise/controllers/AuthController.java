@@ -65,4 +65,27 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
     }
+
+    @GetMapping("/get-user")
+    public ResponseEntity<?> getUser(@RequestHeader("Authorization") String token) {
+        try {
+            if (token == null || !token.startsWith("Bearer ")) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("error", "Invalid token format");
+                error.put("status", HttpStatus.UNAUTHORIZED.value());
+                error.put("timestamp", System.currentTimeMillis());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+
+            String jwtToken = token.replace("Bearer ", "");
+            Map<String, Object> userInfo = userService.getUserFromToken(jwtToken);
+            return ResponseEntity.ok(userInfo);
+        } catch (RuntimeException e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            error.put("status", HttpStatus.UNAUTHORIZED.value());
+            error.put("timestamp", System.currentTimeMillis());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+    }
 }

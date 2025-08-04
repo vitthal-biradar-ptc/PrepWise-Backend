@@ -102,4 +102,21 @@ public class JwtUtil {
     public long getExpirationTime() {
         return jwtExpirationMs;
     }
+
+    public Map<String, Object> getAllClaimsFromTokenAsMap(String token) {
+        try {
+            Claims claims = getAllClaimsFromToken(token);
+            Map<String, Object> claimsMap = new HashMap<>();
+
+            claimsMap.put("username", claims.getSubject());
+            claimsMap.put("email", claims.get("email"));
+            claimsMap.put("userId", claims.get("userId"));
+            claimsMap.put("issuedAt", claims.getIssuedAt());
+            claimsMap.put("expiration", claims.getExpiration());
+
+            return claimsMap;
+        } catch (Exception e) {
+            throw new RuntimeException("Error extracting claims from token: " + e.getMessage());
+        }
+    }
 }

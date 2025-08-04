@@ -8,6 +8,8 @@ import com.PrepWise.repositories.UserRepository;
 import com.PrepWise.config.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -80,11 +82,11 @@ public class UserService {
             userOpt = userRepository.findByUsername(usernameOrEmail);
 
             // If not found by username, try by email
-            if (!userOpt.isPresent()) {
+            if (userOpt.isEmpty()) {
                 userOpt = userRepository.findByEmail(usernameOrEmail);
             }
 
-            if (!userOpt.isPresent()) {
+            if (userOpt.isEmpty()) {
                 throw new RuntimeException("Invalid credentials");
             }
 
@@ -114,5 +116,35 @@ public class UserService {
 
     public String getUsernameFromToken(String token) {
         return jwtUtil.getUsernameFromToken(token);
+    }
+
+    public Map<String, Object> getUserFromToken(String token) {
+        try {
+            // Validate token first
+            if (!jwtUtil.validateToken(token)) {
+                throw new RuntimeException("Invalid or expired token");
+            }
+
+            // Extract username from token
+            String username = jwtUtil.getUsernameFromToken(token);
+
+            // Find user by username
+            Optional<User> userOpt = userRepository.findByUsername(username);
+            if (userOpt.isEmpty()) {
+                throw new RuntimeException("User not found");
+            }
+
+            User user = userOpt.get();
+
+            // Prepare user information response
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("id", user.getId());
+            userInfo.put("username", user.getUsername());
+            userInfo.put("email", user.getEmail());
+
+            return userInfo;
+        } catch (Exception e) {
+            throw new RuntimeException("Error retrieving user from token: " + e.getMessage());
+        }
     }
 }

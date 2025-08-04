@@ -24,7 +24,7 @@ spring:
 
 jwt:
   secret: mySecretKey123456789PrepWiseApplicationSecretKeyForTokenGeneration
-  expiration: 3600000 # 1 hour in milliseconds
+  expiration: 3600000
 
 logging:
   level:
