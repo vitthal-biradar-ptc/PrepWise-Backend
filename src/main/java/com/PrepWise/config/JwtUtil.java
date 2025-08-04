@@ -22,6 +22,11 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long jwtExpirationMs;
 
+    public String generateToken(String username) {
+        Map<String, Object> claims = new HashMap<>();
+        return createToken(claims, username);
+    }
+
     public String generateToken(User user) {
         if (user == null || user.getUsername() == null) {
             throw new IllegalArgumentException("User or username cannot be null");

@@ -8,21 +8,14 @@ import com.PrepWise.repositories.UserRepository;
 import com.PrepWise.config.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 @Service
-@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-
-    private static final Pattern EMAIL_PATTERN =
-        Pattern.compile("^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})$");
 
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
@@ -33,96 +26,93 @@ public class UserService {
     }
 
     public AuthResponse registerUser(SignUpRequest request) {
-        validateSignUpRequest(request);
+        // Validate input
+        if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
+            throw new RuntimeException("Username is required");
+        }
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            throw new RuntimeException("Email is required");
+        }
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+            throw new RuntimeException("Password is required");
+        }
 
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Username already exists");
         }
+
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
 
         try {
+            // Create new user
             User user = new User();
-            user.setUsername(request.getUsername().trim().toLowerCase());
-            user.setEmail(request.getEmail().trim().toLowerCase());
+            user.setUsername(request.getUsername().trim());
+            user.setEmail(request.getEmail().trim());
             user.setPassword(passwordEncoder.encode(request.getPassword()));
 
             User savedUser = userRepository.save(user);
-            String token = jwtUtil.generateToken(savedUser);
 
-            return new AuthResponse(token, jwtUtil.getExpirationTime());
+            // Generate token using string parameter
+            String token = jwtUtil.generateToken(savedUser.getUsername());
+            return new AuthResponse(token);
+
         } catch (Exception e) {
-            throw new RuntimeException("Failed to register user: " + e.getMessage());
+            throw new RuntimeException("Error registering user: " + e.getMessage());
         }
     }
 
     public AuthResponse loginUser(LoginRequest request) {
-        validateLoginRequest(request);
-
-        try {
-            String usernameOrEmail = request.getUsernameOrEmail().trim().toLowerCase();
-
-            Optional<User> userOptional = userRepository.findByUsername(usernameOrEmail);
-
-            if (userOptional.isEmpty()) {
-                userOptional = userRepository.findByEmail(usernameOrEmail);
-            }
-
-            if (userOptional.isEmpty()) {
-                throw new RuntimeException("Invalid username/email or password");
-            }
-
-            User user = userOptional.get();
-
-            if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                throw new RuntimeException("Invalid username/email or password");
-            }
-
-            String token = jwtUtil.generateToken(user);
-            return new AuthResponse(token, jwtUtil.getExpirationTime());
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("Login failed: " + e.getMessage());
-        }
-    }
-
-    public boolean validateToken(String token) {
-        return jwtUtil.validateToken(token);
-    }
-
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
-    }
-
-    private void validateSignUpRequest(SignUpRequest request) {
-        if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
-            throw new RuntimeException("Username is required");
-        }
-        if (request.getUsername().trim().length() < 3) {
-            throw new RuntimeException("Username must be at least 3 characters long");
-        }
-        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
-            throw new RuntimeException("Email is required");
-        }
-        if (!EMAIL_PATTERN.matcher(request.getEmail().trim()).matches()) {
-            throw new RuntimeException("Please provide a valid email address");
-        }
-        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
-            throw new RuntimeException("Password is required");
-        }
-        if (request.getPassword().length() < 6) {
-            throw new RuntimeException("Password must be at least 6 characters long");
-        }
-    }
-
-    private void validateLoginRequest(LoginRequest request) {
+        // Validate input
         if (request.getUsernameOrEmail() == null || request.getUsernameOrEmail().trim().isEmpty()) {
             throw new RuntimeException("Username or email is required");
         }
         if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
             throw new RuntimeException("Password is required");
         }
+
+        try {
+            String usernameOrEmail = request.getUsernameOrEmail().trim();
+            Optional<User> userOpt;
+
+            // First try to find by username
+            userOpt = userRepository.findByUsername(usernameOrEmail);
+
+            // If not found by username, try by email
+            if (!userOpt.isPresent()) {
+                userOpt = userRepository.findByEmail(usernameOrEmail);
+            }
+
+            if (!userOpt.isPresent()) {
+                throw new RuntimeException("Invalid credentials");
+            }
+
+            User user = userOpt.get();
+
+            // Verify password
+            if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+                throw new RuntimeException("Invalid credentials");
+            }
+
+            // Generate token
+            String token = jwtUtil.generateToken(user.getUsername());
+            return new AuthResponse(token);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error logging in: " + e.getMessage());
+        }
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            return jwtUtil.validateToken(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String getUsernameFromToken(String token) {
+        return jwtUtil.getUsernameFromToken(token);
     }
 }
