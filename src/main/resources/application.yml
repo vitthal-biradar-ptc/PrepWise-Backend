@@ -23,7 +23,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 jwt:
-  secret: mySecretKey123456789PrepWiseApplicationSecretKeyForTokenGenerationAndValidation2024
+  secret: mySecretKey123456789PrepWiseApplicationSecretKeyForTokenGeneration
   expiration: 3600000 # 1 hour in milliseconds
 
 logging:

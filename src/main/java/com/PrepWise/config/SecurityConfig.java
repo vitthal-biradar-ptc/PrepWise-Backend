@@ -35,15 +35,16 @@ public class SecurityConfig {
                     .includeSubDomains(true))
                 .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints - Allow multiple variations
-                .requestMatchers(HttpMethod.POST, "/api/auth/sign-up", "/api/auth/signup", "/api/auth/register").permitAll()
+                // Public endpoints
+                .requestMatchers(HttpMethod.POST, "/api/auth/sign-up").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/message", "/api/health").permitAll()
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests
+                .requestMatchers(HttpMethod.GET, "/api/message").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/gemini/ask").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/gemini/analyze-resume").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/gemini/analyze-text").permitAll()
 
                 // Health check endpoints
-                .requestMatchers("/actuator/**").permitAll()
-                .requestMatchers("/error").permitAll()
+                .requestMatchers("/actuator/health").permitAll()
 
                 // All other requests require authentication
                 .anyRequest().authenticated());
