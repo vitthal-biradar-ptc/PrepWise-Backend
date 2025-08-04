@@ -38,6 +38,7 @@ public class SecurityConfig {
                 // Public endpoints - Allow multiple variations
                 .requestMatchers(HttpMethod.POST, "/api/auth/sign-up", "/api/auth/signup", "/api/auth/register").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                    .requestMatchers(HttpMethod.GET,"/api/auth/validate").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/auth/get-user").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/auth/validate").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/gemini/ask").permitAll()
