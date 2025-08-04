@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: PrepWise
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/prepwise_db
+    username: postgres
+    password: PgMarvel@241
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+jwt:
+  secret: mySecretKey123456789PrepWiseApplicationSecretKeyForTokenGenerationAndValidation2024
+  expiration: 3600000 # 1 hour in milliseconds
+
+logging:
+  level:
+    com.PrepWise: DEBUG
+    org.springframework.security: DEBUG
