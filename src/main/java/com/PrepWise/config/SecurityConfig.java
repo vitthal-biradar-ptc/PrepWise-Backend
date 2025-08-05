@@ -41,15 +41,9 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET,"/api/auth/validate").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/auth/get-user").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/auth/validate").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/gemini/ask").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/gemini/analyze-resume").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/gemini/analyze-text").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/message", "/api/health").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/analyze-resume").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/analyze-text").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests
-
-                // Health check endpoints
-                .requestMatchers("/actuator/**").permitAll()
-                .requestMatchers("/error").permitAll()
 
                 // All other requests require authentication
                 .anyRequest().authenticated());

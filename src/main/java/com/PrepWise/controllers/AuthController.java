@@ -24,17 +24,66 @@ public class AuthController {
     }
 
     @PostMapping("/sign-up")
-    public ResponseEntity<?> register(@Valid @RequestBody SignUpRequest request) {
+    public ResponseEntity<?> register(
+            @RequestParam("username") String username,
+            @RequestParam("email") String email,
+            @RequestParam("password") String password,
+            @RequestParam("name") String name,
+            @RequestParam("location") String location,
+            @RequestParam(value = "githubUrl", required = false) String githubUrl,
+            @RequestParam(value = "linkedinUrl", required = false) String linkedinUrl,
+            @RequestParam(value = "portfolioLink", required = false) String portfolioLink) {
         try {
+            // Validate required fields
+            if (username == null || username.trim().isEmpty()) {
+                return createErrorResponse("Username is required", HttpStatus.BAD_REQUEST);
+            }
+            if (email == null || email.trim().isEmpty()) {
+                return createErrorResponse("Email is required", HttpStatus.BAD_REQUEST);
+            }
+            if (password == null || password.trim().isEmpty()) {
+                return createErrorResponse("Password is required", HttpStatus.BAD_REQUEST);
+            }
+            if (name == null || name.trim().isEmpty()) {
+                return createErrorResponse("Name is required", HttpStatus.BAD_REQUEST);
+            }
+            if (location == null || location.trim().isEmpty()) {
+                return createErrorResponse("Location is required", HttpStatus.BAD_REQUEST);
+            }
+
+            SignUpRequest request = new SignUpRequest();
+            request.setUsername(username.trim());
+            request.setEmail(email.trim());
+            request.setPassword(password);
+            request.setName(name.trim());
+            request.setLocation(location.trim());
+            request.setGithubUrl(githubUrl != null ? githubUrl.trim() : null);
+            request.setLinkedinUrl(linkedinUrl != null ? linkedinUrl.trim() : null);
+            request.setPortfolioLink(portfolioLink != null ? portfolioLink.trim() : null);
+
             AuthResponse response = userService.registerUser(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+            Map<String, Object> successResponse = new HashMap<>();
+            successResponse.put("token", response.getToken());
+            successResponse.put("tokenType", response.getTokenType());
+            successResponse.put("message", "User registered successfully");
+            successResponse.put("status", HttpStatus.CREATED.value());
+            successResponse.put("timestamp", System.currentTimeMillis());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(successResponse);
         } catch (RuntimeException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            error.put("status", HttpStatus.BAD_REQUEST.value());
-            error.put("timestamp", System.currentTimeMillis());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            return createErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return createErrorResponse("An unexpected error occurred during registration", HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private ResponseEntity<?> createErrorResponse(String message, HttpStatus status) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("error", message);
+        error.put("status", status.value());
+        error.put("timestamp", System.currentTimeMillis());
+        return ResponseEntity.status(status).body(error);
     }
 
     @PostMapping("/login")

@@ -18,12 +18,30 @@ public class SignUpRequest {
     @Size(min = 6, message = "Password must be at least 6 characters long")
     private String password;
 
+    @NotBlank(message = "Name is required")
+    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
+    private String name;
+
+    @NotBlank(message = "Location is required")
+    @Size(min = 2, max = 200, message = "Location must be between 2 and 200 characters")
+    private String location;
+
+    private String githubUrl;
+    private String linkedinUrl;
+    private String portfolioLink;
+
     public SignUpRequest() {}
 
-    public SignUpRequest(String username, String email, String password) {
+    public SignUpRequest(String username, String email, String password, String name, String location,
+                         String githubUrl, String linkedinUrl, String portfolioLink) {
         this.username = username;
         this.email = email;
         this.password = password;
+        this.name = name;
+        this.location = location;
+        this.githubUrl = githubUrl;
+        this.linkedinUrl = linkedinUrl;
+        this.portfolioLink = portfolioLink;
     }
 
     public String getUsername() {
@@ -48,5 +66,45 @@ public class SignUpRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getGithubUrl() {
+        return githubUrl;
+    }
+
+    public void setGithubUrl(String githubUrl) {
+        this.githubUrl = githubUrl;
+    }
+
+    public String getLinkedinUrl() {
+        return linkedinUrl;
+    }
+
+    public void setLinkedinUrl(String linkedinUrl) {
+        this.linkedinUrl = linkedinUrl;
+    }
+
+    public String getPortfolioLink() {
+        return portfolioLink;
+    }
+
+    public void setPortfolioLink(String portfolioLink) {
+        this.portfolioLink = portfolioLink;
     }
 }

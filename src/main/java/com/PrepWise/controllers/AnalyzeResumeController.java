@@ -16,27 +16,13 @@ import java.util.List;
 import java.util.Objects;
 
 @RestController
-@RequestMapping("/api/gemini")
+@RequestMapping("/api")
 @RequiredArgsConstructor
-public class GeminiController {
+public class AnalyzeResumeController {
 
     private final GeminiService geminiService;
     private final PdfService pdfService;
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    @PostMapping("/ask")
-    public ResponseEntity<ResumeAnalysisResponse> askGeminiAPI(@RequestBody ResumeAnalysisRequest request) {
-        try {
-            String response = geminiService.askGemini(request.getPrompt());
-            ResumeAnalysisResponse analysisResponse = parseGeminiResponse(response);
-            return ResponseEntity.ok(analysisResponse);
-        } catch (Exception e) {
-            ResumeAnalysisResponse errorResponse = new ResumeAnalysisResponse();
-            errorResponse.setDomain("Error");
-            errorResponse.setSuggestions(List.of("Error: " + e.getMessage()));
-            return ResponseEntity.badRequest().body(errorResponse);
-        }
-    }
 
     @PostMapping("/analyze-resume")
     public ResponseEntity<ResumeAnalysisResponse> analyzeResume(@RequestParam("file") MultipartFile file) {
@@ -101,4 +87,6 @@ public class GeminiController {
             return fallbackResponse;
         }
     }
+
+
 }
