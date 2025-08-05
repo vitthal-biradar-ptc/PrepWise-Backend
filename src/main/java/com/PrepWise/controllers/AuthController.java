@@ -14,7 +14,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class AuthController {
 
     private final UserService userService;
@@ -24,42 +23,39 @@ public class AuthController {
     }
 
     @PostMapping("/sign-up")
-    public ResponseEntity<?> register(
-            @RequestParam("username") String username,
-            @RequestParam("email") String email,
-            @RequestParam("password") String password,
-            @RequestParam("name") String name,
-            @RequestParam("location") String location,
-            @RequestParam(value = "githubUrl", required = false) String githubUrl,
-            @RequestParam(value = "linkedinUrl", required = false) String linkedinUrl,
-            @RequestParam(value = "portfolioLink", required = false) String portfolioLink) {
+    public ResponseEntity<?> register(@Valid @RequestBody SignUpRequest request) {
         try {
             // Validate required fields
-            if (username == null || username.trim().isEmpty()) {
+            if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
                 return createErrorResponse("Username is required", HttpStatus.BAD_REQUEST);
             }
-            if (email == null || email.trim().isEmpty()) {
+            if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
                 return createErrorResponse("Email is required", HttpStatus.BAD_REQUEST);
             }
-            if (password == null || password.trim().isEmpty()) {
+            if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
                 return createErrorResponse("Password is required", HttpStatus.BAD_REQUEST);
             }
-            if (name == null || name.trim().isEmpty()) {
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
                 return createErrorResponse("Name is required", HttpStatus.BAD_REQUEST);
             }
-            if (location == null || location.trim().isEmpty()) {
+            if (request.getLocation() == null || request.getLocation().trim().isEmpty()) {
                 return createErrorResponse("Location is required", HttpStatus.BAD_REQUEST);
             }
 
-            SignUpRequest request = new SignUpRequest();
-            request.setUsername(username.trim());
-            request.setEmail(email.trim());
-            request.setPassword(password);
-            request.setName(name.trim());
-            request.setLocation(location.trim());
-            request.setGithubUrl(githubUrl != null ? githubUrl.trim() : null);
-            request.setLinkedinUrl(linkedinUrl != null ? linkedinUrl.trim() : null);
-            request.setPortfolioLink(portfolioLink != null ? portfolioLink.trim() : null);
+            // Trim the values
+            request.setUsername(request.getUsername().trim());
+            request.setEmail(request.getEmail().trim());
+            request.setName(request.getName().trim());
+            request.setLocation(request.getLocation().trim());
+            if (request.getGithubUrl() != null) {
+                request.setGithubUrl(request.getGithubUrl().trim());
+            }
+            if (request.getLinkedinUrl() != null) {
+                request.setLinkedinUrl(request.getLinkedinUrl().trim());
+            }
+            if (request.getPortfolioLink() != null) {
+                request.setPortfolioLink(request.getPortfolioLink().trim());
+            }
 
             AuthResponse response = userService.registerUser(request);
 
