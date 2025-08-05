@@ -62,6 +62,53 @@ public class GeminiService {
                 """ + resumeText;
     }
 
+    public String parseResumeForUserDetails(String resumeText) {
+        String parsePrompt = createResumeParsePrompt(resumeText);
+        return askGemini(parsePrompt);
+    }
+
+    private String createResumeParsePrompt(String resumeText) {
+        return """
+                Please extract domain, skills, certifications, and achievements from the following resume and provide a structured response in JSON format only:
+                
+                Return your response in this exact JSON format (no markdown, no code blocks):
+                {
+                  "domain": "[Primary domain - choose ONE from: Full Stack Development, Frontend Development, Backend Development, Mobile Development, DevOps Engineering, Cloud Engineering, Data Science, Machine Learning Engineering, Artificial Intelligence, Cybersecurity, Quality Assurance, UI/UX Design, Game Development, Blockchain Development, Software Architecture, Database Administration, Network Engineering, System Administration, Product Management, Technical Writing]",
+                  "skills": [
+                    {
+                      "name": "[Skill name]",
+                      "proficiency": "[Beginner/Intermediate/Advanced/Expert]"
+                    }
+                  ],
+                  "certifications": [
+                    {
+                      "name": "[Certification name]",
+                      "issuer": "[Issuing organization]",
+                      "date": "[Date or year obtained]"
+                    }
+                  ],
+                  "achievements": [
+                    {
+                      "name": "[Achievement title]",
+                      "description": "[Brief description]",
+                      "date": "[Date or year achieved]"
+                    }
+                  ]
+                }
+                
+                Guidelines:
+                - For domain: Pick the SINGLE most relevant domain from the list above. Do NOT combine domains or create custom ones. If the person has multiple skills, choose the PRIMARY domain they are most suited for.
+                - For skills, infer proficiency level based on experience, projects, or mentions
+                - Extract only legitimate certifications with clear issuers
+                - Include notable achievements, awards, recognitions, or significant accomplishments
+                - Use "Unknown" for dates if not specified
+                - If any category has no data, return an empty array
+                - Only get top 10 skills, top 3 certifications, and top 3 achievements
+                
+                Resume Text:
+                """ + resumeText;
+    }
+
     private Map<String, Object> createGeminiRequest(String prompt) {
         Map<String, Object> request = new HashMap<>();
         Map<String, Object> content = new HashMap<>();

@@ -163,95 +163,51 @@ public class UserService {
             Map<String, Object> response = new HashMap<>();
 
             // User basic info
-            Map<String, Object> userInfo = new HashMap<>();
-            userInfo.put("profilePhoto", user.getProfilePhoto());
-            userInfo.put("name", user.getName());
-            userInfo.put("email", user.getEmail());
-            userInfo.put("domainBadge", user.getDomainBadge() != null ? user.getDomainBadge() : "Full Stack Developer");
-            userInfo.put("location", user.getLocation());
-            userInfo.put("githubUrl", user.getGithubUrl());
-            userInfo.put("linkedinUrl", user.getLinkedinUrl());
-            userInfo.put("portfolioLink", user.getPortfolioLink());
+            response.put("profilePhoto", user.getProfilePhoto());
+            response.put("name", user.getName());
+            response.put("email", user.getEmail());
+            response.put("domainBadge", user.getDomainBadge() != null ? user.getDomainBadge() : "Software Development");
+            response.put("location", user.getLocation());
+            response.put("githubUrl", user.getGithubUrl());
+            response.put("linkedinUrl", user.getLinkedinUrl());
+            response.put("portfolioLink", user.getPortfolioLink());
 
-            response.put("user", userInfo);
-
-            // Charts data - exact format as specified
-            Map<String, Object> charts = new HashMap<>();
-
-            // Domain data chart
-            Map<String, Object> domainData = new HashMap<>();
-            domainData.put("labels", List.of("Web Development", "Mobile App Development", "DevOps", "Data Science", "CyberSecurity", "Cloud Engineer"));
-            Map<String, Object> domainDataset = new HashMap<>();
-            domainDataset.put("data", List.of(30, 20, 15, 10, 10, 15));
-            domainData.put("datasets", List.of(domainDataset));
-
-            // ATS data chart
-            Map<String, Object> atsData = new HashMap<>();
-            atsData.put("labels", List.of("Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6"));
-            Map<String, Object> atsDataset = new HashMap<>();
-            atsDataset.put("label", "ATS Score");
-            atsDataset.put("data", List.of(65, 59, 80, 81, 56, 55));
-            atsDataset.put("fill", false);
-            atsDataset.put("borderColor", "#42A5F5");
-            atsDataset.put("tension", 0.4);
-            atsData.put("datasets", List.of(atsDataset));
-
-            charts.put("domainData", domainData);
-            charts.put("atsData", atsData);
-            response.put("charts", charts);
-
-            // Skills - exact format as specified
-            List<Map<String, String>> skills = user.getSkills() != null && !user.getSkills().isEmpty() ?
-                user.getSkills().stream().map(skill -> {
-                    Map<String, String> skillMap = new HashMap<>();
-                    skillMap.put("name", skill.getName());
-                    skillMap.put("proficiency", skill.getProficiency());
-                    return skillMap;
-                }).collect(Collectors.toList()) :
-                List.of(
-                    Map.of("name", "Angular", "proficiency", "Advanced"),
-                    Map.of("name", "React", "proficiency", "Intermediate"),
-                    Map.of("name", "Node.js", "proficiency", "Advanced"),
-                    Map.of("name", "Express", "proficiency", "Intermediate"),
-                    Map.of("name", "TypeScript", "proficiency", "Advanced"),
-                    Map.of("name", "PrimeNG", "proficiency", "Beginner"),
-                    Map.of("name", "MongoDB", "proficiency", "Intermediate"),
-                    Map.of("name", "AWS", "proficiency", "Beginner")
-                );
+            // Skills
+            List<Map<String, Object>> skills = user.getSkills().stream()
+                    .map(skill -> {
+                        Map<String, Object> skillMap = new HashMap<>();
+                        skillMap.put("id", skill.getId());
+                        skillMap.put("name", skill.getName());
+                        skillMap.put("proficiency", skill.getProficiency());
+                        return skillMap;
+                    })
+                    .collect(Collectors.toList());
             response.put("skills", skills);
 
-            // Certifications - exact format as specified
-            List<Map<String, String>> certifications = user.getCertifications() != null && !user.getCertifications().isEmpty() ?
-                user.getCertifications().stream().map(cert -> {
-                    Map<String, String> certMap = new HashMap<>();
-                    certMap.put("name", cert.getName());
-                    certMap.put("issuer", cert.getIssuer());
-                    certMap.put("date", cert.getDate());
-                    return certMap;
-                }).collect(Collectors.toList()) :
-                List.of(
-                    Map.of("name", "AWS Certified Developer – Associate", "issuer", "Amazon Web Services", "date", "Jan 2024"),
-                    Map.of("name", "Professional Scrum Master I", "issuer", "Scrum.org", "date", "Oct 2023")
-                );
+            // Certifications
+            List<Map<String, Object>> certifications = user.getCertifications().stream()
+                    .map(cert -> {
+                        Map<String, Object> certMap = new HashMap<>();
+                        certMap.put("id", cert.getId());
+                        certMap.put("name", cert.getName());
+                        certMap.put("issuer", cert.getIssuer());
+                        certMap.put("date", cert.getDate());
+                        return certMap;
+                    })
+                    .collect(Collectors.toList());
             response.put("certifications", certifications);
 
-            // Achievements - exact format as specified
-            List<Map<String, String>> achievements = user.getAchievements() != null && !user.getAchievements().isEmpty() ?
-                user.getAchievements().stream().map(achievement -> {
-                    Map<String, String> achievementMap = new HashMap<>();
-                    achievementMap.put("name", achievement.getName());
-                    achievementMap.put("description", achievement.getDescription());
-                    achievementMap.put("date", achievement.getDate());
-                    return achievementMap;
-                }).collect(Collectors.toList()) :
-                List.of(
-                    Map.of("name", "Contributor to Open Source Project 'ngx-datatable'",
-                           "description", "Submitted several bug fixes and feature enhancements to a popular Angular library.",
-                           "date", "Mar 2024"),
-                    Map.of("name", "Hackathon Winner: Best UI/UX Design",
-                           "description", "Led the design and development of the front-end for a winning team at a regional hackathon.",
-                           "date", "Aug 2023")
-                );
+            // Achievements
+            List<Map<String, Object>> achievements = user.getAchievements().stream()
+                    .map(achievement -> {
+                        Map<String, Object> achievementMap = new HashMap<>();
+                        achievementMap.put("id", achievement.getId());
+                        achievementMap.put("name", achievement.getName());
+                        achievementMap.put("description", achievement.getDescription());
+                        achievementMap.put("date", achievement.getDate());
+                        return achievementMap;
+                    })
+                    .collect(Collectors.toList());
             response.put("achievements", achievements);
 
             return response;

@@ -43,6 +43,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/auth/validate").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/analyze-resume").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/analyze-text").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/parse-resume").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests
 
                 // All other requests require authentication
