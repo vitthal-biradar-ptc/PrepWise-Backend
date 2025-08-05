@@ -9,6 +9,7 @@ import com.PrepWise.config.JwtUtil;
 import com.PrepWise.utils.FileUploadService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +24,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final FileUploadService fileUploadService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
@@ -171,6 +173,26 @@ public class UserService {
             response.put("githubUrl", user.getGithubUrl());
             response.put("linkedinUrl", user.getLinkedinUrl());
             response.put("portfolioLink", user.getPortfolioLink());
+
+            // Domain distribution data
+            if (user.getDomainDistribution() != null && !user.getDomainDistribution().trim().isEmpty()) {
+                try {
+                    Map<String, Object> domainData = objectMapper.readValue(user.getDomainDistribution(), Map.class);
+                    response.put("domainData", domainData);
+                } catch (Exception e) {
+                    // Fallback if parsing fails
+                    Map<String, Object> fallbackDomainData = new HashMap<>();
+                    fallbackDomainData.put("labels", List.of("Software Development"));
+                    fallbackDomainData.put("datasets", List.of(Map.of("data", List.of(100))));
+                    response.put("domainData", fallbackDomainData);
+                }
+            } else {
+                // Default domain data if not set
+                Map<String, Object> defaultDomainData = new HashMap<>();
+                defaultDomainData.put("labels", List.of("Software Development"));
+                defaultDomainData.put("datasets", List.of(Map.of("data", List.of(100))));
+                response.put("domainData", defaultDomainData);
+            }
 
             // Skills
             List<Map<String, Object>> skills = user.getSkills().stream()

@@ -33,6 +33,10 @@ public class User {
     private String location;
 
     private String domainBadge;
+
+    @Column(columnDefinition = "TEXT")
+    private String domainDistribution;
+
     private String githubUrl;
     private String linkedinUrl;
     private String portfolioLink;
@@ -82,6 +86,9 @@ public class User {
 
     public String getDomainBadge() { return domainBadge; }
     public void setDomainBadge(String domainBadge) { this.domainBadge = domainBadge; }
+
+    public String getDomainDistribution() { return domainDistribution; }
+    public void setDomainDistribution(String domainDistribution) { this.domainDistribution = domainDistribution; }
 
     public String getGithubUrl() { return githubUrl; }
     public void setGithubUrl(String githubUrl) { this.githubUrl = githubUrl; }

@@ -69,7 +69,7 @@ public class GeminiService {
 
     private String createResumeParsePrompt(String resumeText) {
         return """
-                Please extract domain, skills, certifications, and achievements from the following resume and provide a structured response in JSON format only:
+                Please extract domain, skills, certifications, achievements, and domain distribution from the following resume and provide a structured response in JSON format only:
                 
                 Return your response in this exact JSON format (no markdown, no code blocks):
                 {
@@ -93,7 +93,11 @@ public class GeminiService {
                       "description": "[Brief description]",
                       "date": "[Date or year achieved]"
                     }
-                  ]
+                  ],
+                  "domainDistribution": {
+                    "labels": ["[Domain1]", "[Domain2]", "[Domain3]", "[Domain4]", "[Domain5]"],
+                    "data": [30, 25, 20, 15, 10]
+                  }
                 }
                 
                 Guidelines:
@@ -104,6 +108,7 @@ public class GeminiService {
                 - Use "Unknown" for dates if not specified
                 - If any category has no data, return an empty array
                 - Only get top 10 skills, top 3 certifications, and top 3 achievements
+                - For domainDistribution: Analyze the resume and identify the top 5 domains the person has experience in. Use these specific domain names: Web Development, Mobile App Development, DevOps, Data Science, Machine Learning, Artificial Intelligence, Cybersecurity, Cloud Computing, UI/UX Design, Game Development, Blockchain, Database Management, Network Engineering, Quality Assurance, Technical Writing, Product Management, Software Architecture, System Administration. The percentages should add up to 100 and represent the person's skill distribution across these domains based on their resume content.
                 
                 Resume Text:
                 """ + resumeText;

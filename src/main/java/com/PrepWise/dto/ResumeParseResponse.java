@@ -7,6 +7,7 @@ public class ResumeParseResponse {
     private List<SkillDto> skills;
     private List<CertificationDto> certifications;
     private List<AchievementDto> achievements;
+    private DomainDistributionDto domainDistribution;
 
     public static class SkillDto {
         private String name;
@@ -64,6 +65,22 @@ public class ResumeParseResponse {
         public void setDate(String date) { this.date = date; }
     }
 
+    public static class DomainDistributionDto {
+        private List<String> labels;
+        private List<Integer> data;
+
+        public DomainDistributionDto() {}
+        public DomainDistributionDto(List<String> labels, List<Integer> data) {
+            this.labels = labels;
+            this.data = data;
+        }
+
+        public List<String> getLabels() { return labels; }
+        public void setLabels(List<String> labels) { this.labels = labels; }
+        public List<Integer> getData() { return data; }
+        public void setData(List<Integer> data) { this.data = data; }
+    }
+
     public String getDomain() { return domain; }
     public void setDomain(String domain) { this.domain = domain; }
 
@@ -73,4 +90,6 @@ public class ResumeParseResponse {
     public void setCertifications(List<CertificationDto> certifications) { this.certifications = certifications; }
     public List<AchievementDto> getAchievements() { return achievements; }
     public void setAchievements(List<AchievementDto> achievements) { this.achievements = achievements; }
+    public DomainDistributionDto getDomainDistribution() { return domainDistribution; }
+    public void setDomainDistribution(DomainDistributionDto domainDistribution) { this.domainDistribution = domainDistribution; }
 }

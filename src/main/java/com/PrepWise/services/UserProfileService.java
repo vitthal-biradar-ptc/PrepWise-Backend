@@ -9,8 +9,11 @@ import com.PrepWise.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,6 +21,7 @@ import java.util.stream.Collectors;
 public class UserProfileService {
 
     private final UserRepository userRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Transactional
     public void updateUserProfileFromResume(String username, ResumeParseResponse resumeData) {
@@ -27,6 +31,23 @@ public class UserProfileService {
         // Update domain badge
         if (resumeData.getDomain() != null && !resumeData.getDomain().trim().isEmpty()) {
             user.setDomainBadge(resumeData.getDomain().trim());
+        }
+
+        // Update domain distribution
+        if (resumeData.getDomainDistribution() != null) {
+            try {
+                Map<String, Object> domainData = new HashMap<>();
+                domainData.put("labels", resumeData.getDomainDistribution().getLabels());
+
+                Map<String, Object> dataset = new HashMap<>();
+                dataset.put("data", resumeData.getDomainDistribution().getData());
+                domainData.put("datasets", List.of(dataset));
+
+                String domainDistributionJson = objectMapper.writeValueAsString(domainData);
+                user.setDomainDistribution(domainDistributionJson);
+            } catch (Exception e) {
+                System.err.println("Error serializing domain distribution: " + e.getMessage());
+            }
         }
 
         // Clear existing data
