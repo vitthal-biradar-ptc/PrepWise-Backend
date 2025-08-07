@@ -127,6 +127,7 @@ public class AnalyzeResumeController {
             throw new RuntimeException("Failed to parse Gemini response: " + e.getMessage());
         }
     }
+
     private ResumeAnalysisResponse parseGeminiResponse(String response) {
         try {
             String cleanResponse = response.replaceAll("```json\\s*", "").replaceAll("```\\s*$", "").trim();

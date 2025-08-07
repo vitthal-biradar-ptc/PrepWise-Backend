@@ -36,10 +36,11 @@ public class SecurityConfig {
                 .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints - Allow multiple variations
-                .requestMatchers(HttpMethod.POST, "/api/auth/sign-up", "/api/auth/signup", "/api/auth/register").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/sign-up").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                     .requestMatchers(HttpMethod.GET,"/api/auth/validate").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/auth/get-user").permitAll()
+                    .requestMatchers(HttpMethod.PUT, "/api/update-profile").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/auth/validate").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/analyze-resume").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/analyze-text").permitAll()

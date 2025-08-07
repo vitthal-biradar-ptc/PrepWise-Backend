@@ -3,13 +3,17 @@ package com.PrepWise.services;
 import com.PrepWise.dto.AuthResponse;
 import com.PrepWise.dto.LoginRequest;
 import com.PrepWise.dto.SignUpRequest;
+import com.PrepWise.dto.UpdateProfileRequest;
 import com.PrepWise.entities.User;
+import com.PrepWise.entities.Achievement;
+import com.PrepWise.entities.Certification;
+import com.PrepWise.entities.Skill;
 import com.PrepWise.repositories.UserRepository;
 import com.PrepWise.config.JwtUtil;
-import com.PrepWise.utils.FileUploadService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,17 +27,15 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private final FileUploadService fileUploadService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtUtil jwtUtil,
-                       FileUploadService fileUploadService) {
+                       JwtUtil jwtUtil
+                      ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
-        this.fileUploadService = fileUploadService;
     }
 
     public AuthResponse registerUser(SignUpRequest request) {
@@ -64,7 +66,7 @@ public class UserService {
 
         try {
             // Generate dummy profile photo URL
-            String profilePhotoUrl = fileUploadService.generateDefaultAvatar(request.getEmail());
+            String profilePhotoUrl = generateDefaultAvatar(request.getEmail());
             System.out.println("Generated dummy avatar for user " + request.getEmail() + ": " + profilePhotoUrl);
 
             // Create new user
@@ -141,6 +143,11 @@ public class UserService {
 
     public String getUsernameFromToken(String token) {
         return jwtUtil.getUsernameFromToken(token);
+    }public String generateDefaultAvatar(String email) {
+        if (email != null && !email.isEmpty()) {
+            return "https://i.pravatar.cc/150?u=" + Math.abs(email.hashCode());
+        }
+        return "https://i.pravatar.cc/150?u=" + System.currentTimeMillis();
     }
 
     public Map<String, Object> getUserFromToken(String token) {
@@ -235,6 +242,112 @@ public class UserService {
             return response;
         } catch (Exception e) {
             throw new RuntimeException("Error retrieving user from token: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    public Map<String, Object> updateUserProfile(String token, UpdateProfileRequest request) {
+        try {
+            // Validate token
+            if (!jwtUtil.validateToken(token)) {
+                throw new RuntimeException("Invalid or expired token");
+            }
+
+            // Extract username from token
+            String username = jwtUtil.getUsernameFromToken(token);
+
+            // Find user by username
+            Optional<User> userOpt = userRepository.findByUsername(username);
+            if (userOpt.isEmpty()) {
+                throw new RuntimeException("User not found");
+            }
+
+            User user = userOpt.get();
+
+            // Update basic user information
+            if (request.getName() != null && !request.getName().trim().isEmpty()) {
+                user.setName(request.getName().trim());
+            }
+            if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+                user.setEmail(request.getEmail().trim());
+            }
+            if (request.getLocation() != null && !request.getLocation().trim().isEmpty()) {
+                user.setLocation(request.getLocation().trim());
+            }
+            if (request.getProfilePhoto() != null && !request.getProfilePhoto().trim().isEmpty()) {
+                user.setProfilePhoto(request.getProfilePhoto().trim());
+            }
+            if (request.getDomainBadge() != null && !request.getDomainBadge().trim().isEmpty()) {
+                user.setDomainBadge(request.getDomainBadge().trim());
+            }
+
+            // Update URLs
+            user.setGithubUrl(request.getGithubUrl());
+            user.setLinkedinUrl(request.getLinkedinUrl());
+            user.setPortfolioLink(request.getPortfolioLink());
+
+            // Update domain distribution
+            if (request.getDomainData() != null) {
+                try {
+                    String domainDistributionJson = objectMapper.writeValueAsString(request.getDomainData());
+                    user.setDomainDistribution(domainDistributionJson);
+                } catch (Exception e) {
+                    System.err.println("Error serializing domain distribution: " + e.getMessage());
+                }
+            }
+
+            // Clear existing related entities
+            user.getSkills().clear();
+            user.getCertifications().clear();
+            user.getAchievements().clear();
+
+            // Update skills
+            if (request.getSkills() != null) {
+                List<Skill> skills = request.getSkills().stream()
+                        .map(skillDto -> {
+                            Skill skill = new Skill(skillDto.getName(), skillDto.getProficiency());
+                            skill.setUser(user);
+                            return skill;
+                        })
+                        .collect(Collectors.toList());
+                user.setSkills(skills);
+            }
+
+            // Update certifications
+            if (request.getCertifications() != null) {
+                List<Certification> certifications = request.getCertifications().stream()
+                        .map(certDto -> {
+                            Certification cert = new Certification(certDto.getName(), certDto.getIssuer(), certDto.getDate());
+                            cert.setUser(user);
+                            return cert;
+                        })
+                        .collect(Collectors.toList());
+                user.setCertifications(certifications);
+            }
+
+            // Update achievements
+            if (request.getAchievements() != null) {
+                List<Achievement> achievements = request.getAchievements().stream()
+                        .map(achDto -> {
+                            Achievement achievement = new Achievement(achDto.getName(), achDto.getDescription(), achDto.getDate());
+                            achievement.setUser(user);
+                            return achievement;
+                        })
+                        .collect(Collectors.toList());
+                user.setAchievements(achievements);
+            }
+
+            // Save updated user
+            User savedUser = userRepository.save(user);
+
+            // Return success response
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Profile updated successfully");
+            return response;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error updating user profile: " + e.getMessage());
         }
     }
 }
