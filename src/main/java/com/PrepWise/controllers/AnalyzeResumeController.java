@@ -112,8 +112,7 @@ public class AnalyzeResumeController {
             // Update user profile in database
             userProfileService.updateUserProfileFromResume(username, resumeData);
 
-            return ResponseEntity.ok("Resume parsed and profile updated successfully");
-
+            return ResponseEntity.ok(Collections.singletonMap("message", "Resume parsed and profile updated successfully"));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error processing resume: " + e.getMessage());
         }

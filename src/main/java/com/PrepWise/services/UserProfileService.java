@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,47 +51,180 @@ public class UserProfileService {
             }
         }
 
-        // Clear existing data
-        user.getSkills().clear();
-        user.getCertifications().clear();
-        user.getAchievements().clear();
-
-        // Add skills
+        // Merge skills instead of clearing
         if (resumeData.getSkills() != null) {
-            List<Skill> skills = resumeData.getSkills().stream()
-                    .map(skillDto -> {
-                        Skill skill = new Skill(skillDto.getName(), skillDto.getProficiency());
-                        skill.setUser(user);
-                        return skill;
-                    })
-                    .collect(Collectors.toList());
-            user.setSkills(skills);
+            mergeSkills(user, resumeData.getSkills());
         }
 
-        // Add certifications
+        // Merge certifications instead of clearing
         if (resumeData.getCertifications() != null) {
-            List<Certification> certifications = resumeData.getCertifications().stream()
-                    .map(certDto -> {
-                        Certification cert = new Certification(certDto.getName(), certDto.getIssuer(), certDto.getDate());
-                        cert.setUser(user);
-                        return cert;
-                    })
-                    .collect(Collectors.toList());
-            user.setCertifications(certifications);
+            mergeCertifications(user, resumeData.getCertifications());
         }
 
-        // Add achievements
+        // Merge achievements instead of clearing
         if (resumeData.getAchievements() != null) {
-            List<Achievement> achievements = resumeData.getAchievements().stream()
-                    .map(achDto -> {
-                        Achievement achievement = new Achievement(achDto.getName(), achDto.getDescription(), achDto.getDate());
-                        achievement.setUser(user);
-                        return achievement;
-                    })
-                    .collect(Collectors.toList());
-            user.setAchievements(achievements);
+            mergeAchievements(user, resumeData.getAchievements());
         }
 
         userRepository.save(user);
+    }
+
+    private void mergeSkills(User user, List<ResumeParseResponse.SkillDto> newSkills) {
+        if (newSkills == null || newSkills.isEmpty()) {
+            return;
+        }
+
+        for (ResumeParseResponse.SkillDto skillDto : newSkills) {
+            if (skillDto.getName() == null || skillDto.getName().trim().isEmpty()) {
+                continue;
+            }
+
+            // Check if skill already exists (case-insensitive)
+            Optional<Skill> existingSkill = user.getSkills().stream()
+                    .filter(skill -> skill.getName().equalsIgnoreCase(skillDto.getName().trim()))
+                    .findFirst();
+
+            if (existingSkill.isPresent()) {
+                // Update proficiency if new level is higher
+                String newProficiency = skillDto.getProficiency();
+                String currentProficiency = existingSkill.get().getProficiency();
+
+                if (isProficiencyHigher(newProficiency, currentProficiency)) {
+                    existingSkill.get().setProficiency(newProficiency);
+                }
+            } else {
+                // Add new skill
+                Skill newSkill = new Skill(skillDto.getName().trim(), skillDto.getProficiency());
+                newSkill.setUser(user);
+                user.getSkills().add(newSkill);
+            }
+        }
+    }
+
+    private boolean isProficiencyHigher(String newProficiency, String currentProficiency) {
+        Map<String, Integer> proficiencyLevels = Map.of(
+                "Beginner", 1,
+                "Intermediate", 2,
+                "Advanced", 3,
+                "Expert", 4
+        );
+
+        int newLevel = proficiencyLevels.getOrDefault(newProficiency, 1);
+        int currentLevel = proficiencyLevels.getOrDefault(currentProficiency, 1);
+
+        return newLevel > currentLevel;
+    }
+
+    private void mergeCertifications(User user, List<ResumeParseResponse.CertificationDto> newCertifications) {
+        if (newCertifications == null || newCertifications.isEmpty()) {
+            return;
+        }
+
+        for (ResumeParseResponse.CertificationDto certDto : newCertifications) {
+            if (certDto.getName() == null || certDto.getName().trim().isEmpty()) {
+                continue;
+            }
+
+            // Check if certification already exists (case-insensitive by name and issuer)
+            Optional<Certification> existingCert = user.getCertifications().stream()
+                    .filter(cert -> cert.getName().equalsIgnoreCase(certDto.getName().trim()) &&
+                                  (certDto.getIssuer() == null || cert.getIssuer().equalsIgnoreCase(certDto.getIssuer().trim())))
+                    .findFirst();
+
+            if (existingCert.isPresent()) {
+                // Update date if new date is more recent or current is "Unknown"
+                String newDate = certDto.getDate();
+                String currentDate = existingCert.get().getDate();
+
+                if (isDateMoreRecent(newDate, currentDate)) {
+                    existingCert.get().setDate(newDate);
+                }
+
+                // Update issuer if it was null or empty
+                if (certDto.getIssuer() != null && !certDto.getIssuer().trim().isEmpty() &&
+                    (existingCert.get().getIssuer() == null || existingCert.get().getIssuer().trim().isEmpty())) {
+                    existingCert.get().setIssuer(certDto.getIssuer().trim());
+                }
+            } else {
+                // Add new certification
+                String issuer = (certDto.getIssuer() != null && !certDto.getIssuer().trim().isEmpty())
+                    ? certDto.getIssuer().trim() : "Unknown";
+                String date = (certDto.getDate() != null && !certDto.getDate().trim().isEmpty())
+                    ? certDto.getDate().trim() : "Unknown";
+
+                Certification newCert = new Certification(certDto.getName().trim(), issuer, date);
+                newCert.setUser(user);
+                user.getCertifications().add(newCert);
+            }
+        }
+    }
+
+    private void mergeAchievements(User user, List<ResumeParseResponse.AchievementDto> newAchievements) {
+        if (newAchievements == null || newAchievements.isEmpty()) {
+            return;
+        }
+
+        for (ResumeParseResponse.AchievementDto achDto : newAchievements) {
+            if (achDto.getName() == null || achDto.getName().trim().isEmpty()) {
+                continue;
+            }
+
+            // Check if achievement already exists (case-insensitive by name)
+            Optional<Achievement> existingAch = user.getAchievements().stream()
+                    .filter(ach -> ach.getName().equalsIgnoreCase(achDto.getName().trim()))
+                    .findFirst();
+
+            if (existingAch.isPresent()) {
+                // Update description if new description is available and longer/more detailed
+                String newDescription = achDto.getDescription();
+                String currentDescription = existingAch.get().getDescription();
+
+                if (newDescription != null && !newDescription.trim().isEmpty() &&
+                    (currentDescription == null || currentDescription.trim().isEmpty() ||
+                     newDescription.length() > currentDescription.length())) {
+                    existingAch.get().setDescription(newDescription.trim());
+                }
+
+                // Update date if new date is more recent
+                String newDate = achDto.getDate();
+                String currentDate = existingAch.get().getDate();
+
+                if (isDateMoreRecent(newDate, currentDate)) {
+                    existingAch.get().setDate(newDate);
+                }
+            } else {
+                // Add new achievement
+                String description = (achDto.getDescription() != null && !achDto.getDescription().trim().isEmpty())
+                    ? achDto.getDescription().trim() : "";
+                String date = (achDto.getDate() != null && !achDto.getDate().trim().isEmpty())
+                    ? achDto.getDate().trim() : "Unknown";
+
+                Achievement newAch = new Achievement(achDto.getName().trim(), description, date);
+                newAch.setUser(user);
+                user.getAchievements().add(newAch);
+            }
+        }
+    }
+
+    private boolean isDateMoreRecent(String newDate, String currentDate) {
+        // If current date is "Unknown" or null, new date is better
+        if (currentDate == null || currentDate.equalsIgnoreCase("Unknown") || currentDate.trim().isEmpty()) {
+            return newDate != null && !newDate.equalsIgnoreCase("Unknown") && !newDate.trim().isEmpty();
+        }
+
+        // If new date is "Unknown", keep current date
+        if (newDate == null || newDate.equalsIgnoreCase("Unknown") || newDate.trim().isEmpty()) {
+            return false;
+        }
+
+        // Simple year comparison if both are numeric years
+        try {
+            int newYear = Integer.parseInt(newDate.replaceAll("[^0-9]", ""));
+            int currentYear = Integer.parseInt(currentDate.replaceAll("[^0-9]", ""));
+            return newYear > currentYear;
+        } catch (NumberFormatException e) {
+            // If can't parse as years, prefer new date over current
+            return true;
+        }
     }
 }

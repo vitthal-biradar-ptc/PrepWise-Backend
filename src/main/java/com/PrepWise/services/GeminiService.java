@@ -48,15 +48,22 @@ public class GeminiService {
                 {
                   "domain": "[Primary domain like Full Stack, DevOps, AI/ML, Blockchain, Data Science, etc.]",
                   "suggestions": [
-                    "[Suggestion 1 to enhance the resume]",
-                    "[Suggestion 2 to enhance the resume]",
-                    "[Suggestion 3 to enhance the resume]",
-                    "[Suggestion 4 to enhance the resume]",
-                    "[Suggestion 5 to enhance the resume]",
-                    "[Suggestion 6 to enhance the resume]",
-                    "[Suggestion 7 to enhance the resume]"
+                    "[Brief actionable suggestion 1 (max 200 characters)]",
+                    "[Brief actionable suggestion 2 (max 200 characters)]",
+                    "[Brief actionable suggestion 3 (max 200 characters)]",
+                    "[Brief actionable suggestion 4 (max 200 characters)]",
+                    "[Brief actionable suggestion 5 (max 200 characters)]",
+                    "[Brief actionable suggestion 6 (max 200 characters)]",
+                    "[Brief actionable suggestion 7 (max 200 characters)]"
                   ]
                 }
+                
+                Guidelines for suggestions:
+                - Keep each suggestion under 200 characters
+                - Focus on specific, actionable improvements
+                - Prioritize high-impact changes
+                - Use concise, direct language
+                - Examples: "Add quantified achievements", "Include relevant keywords", "Highlight leadership experience"
                 
                 Resume Text:
                 """ + resumeText;

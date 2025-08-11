@@ -296,49 +296,55 @@ public class UserService {
                 }
             }
 
-            // Clear existing related entities
+            // For manual profile updates, completely replace collections (clear existing and add new)
+            // This is intentional as user is explicitly setting their profile data
+
+            // Handle skills - remove all existing and add new ones
             user.getSkills().clear();
-            user.getCertifications().clear();
-            user.getAchievements().clear();
-
-            // Update skills
             if (request.getSkills() != null) {
-                List<Skill> skills = request.getSkills().stream()
-                        .map(skillDto -> {
-                            Skill skill = new Skill(skillDto.getName(), skillDto.getProficiency());
+                request.getSkills().stream()
+                        .filter(skillDto -> skillDto.getName() != null && !skillDto.getName().trim().isEmpty())
+                        .forEach(skillDto -> {
+                            Skill skill = new Skill(skillDto.getName().trim(), skillDto.getProficiency());
                             skill.setUser(user);
-                            return skill;
-                        })
-                        .collect(Collectors.toList());
-                user.setSkills(skills);
+                            user.getSkills().add(skill);
+                        });
             }
 
-            // Update certifications
+            // Handle certifications - remove all existing and add new ones
+            user.getCertifications().clear();
             if (request.getCertifications() != null) {
-                List<Certification> certifications = request.getCertifications().stream()
-                        .map(certDto -> {
-                            Certification cert = new Certification(certDto.getName(), certDto.getIssuer(), certDto.getDate());
+                request.getCertifications().stream()
+                        .filter(certDto -> certDto.getName() != null && !certDto.getName().trim().isEmpty())
+                        .forEach(certDto -> {
+                            String issuer = (certDto.getIssuer() != null && !certDto.getIssuer().trim().isEmpty())
+                                ? certDto.getIssuer().trim() : "Unknown";
+                            String date = (certDto.getDate() != null && !certDto.getDate().trim().isEmpty())
+                                ? certDto.getDate().trim() : "Unknown";
+                            Certification cert = new Certification(certDto.getName().trim(), issuer, date);
                             cert.setUser(user);
-                            return cert;
-                        })
-                        .collect(Collectors.toList());
-                user.setCertifications(certifications);
+                            user.getCertifications().add(cert);
+                        });
             }
 
-            // Update achievements
+            // Handle achievements - remove all existing and add new ones
+            user.getAchievements().clear();
             if (request.getAchievements() != null) {
-                List<Achievement> achievements = request.getAchievements().stream()
-                        .map(achDto -> {
-                            Achievement achievement = new Achievement(achDto.getName(), achDto.getDescription(), achDto.getDate());
+                request.getAchievements().stream()
+                        .filter(achDto -> achDto.getName() != null && !achDto.getName().trim().isEmpty())
+                        .forEach(achDto -> {
+                            String description = (achDto.getDescription() != null && !achDto.getDescription().trim().isEmpty())
+                                ? achDto.getDescription().trim() : "";
+                            String date = (achDto.getDate() != null && !achDto.getDate().trim().isEmpty())
+                                ? achDto.getDate().trim() : "Unknown";
+                            Achievement achievement = new Achievement(achDto.getName().trim(), description, date);
                             achievement.setUser(user);
-                            return achievement;
-                        })
-                        .collect(Collectors.toList());
-                user.setAchievements(achievements);
+                            user.getAchievements().add(achievement);
+                        });
             }
 
             // Save updated user
-            User savedUser = userRepository.save(user);
+            userRepository.save(user);
 
             // Return success response
             Map<String, Object> response = new HashMap<>();

@@ -39,7 +39,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/sign-up").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                     .requestMatchers(HttpMethod.GET,"/api/auth/validate").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/auth/get-user").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/get-user").permitAll()
                     .requestMatchers(HttpMethod.PUT, "/api/update-profile").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/auth/validate").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/analyze-resume").permitAll()

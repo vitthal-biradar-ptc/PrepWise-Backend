@@ -1,6 +1,7 @@
 package com.PrepWise.entities;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -41,14 +42,14 @@ public class User {
     private String linkedinUrl;
     private String portfolioLink;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Skill> skills;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<Skill> skills = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Certification> certifications;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<Certification> certifications = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Achievement> achievements;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<Achievement> achievements = new ArrayList<>();
 
     // Constructors
     public User() {}
@@ -100,11 +101,29 @@ public class User {
     public void setPortfolioLink(String portfolioLink) { this.portfolioLink = portfolioLink; }
 
     public List<Skill> getSkills() { return skills; }
-    public void setSkills(List<Skill> skills) { this.skills = skills; }
+    public void setSkills(List<Skill> skills) {
+        this.skills.clear();
+        if (skills != null) {
+            skills.forEach(skill -> skill.setUser(this));
+            this.skills.addAll(skills);
+        }
+    }
 
     public List<Certification> getCertifications() { return certifications; }
-    public void setCertifications(List<Certification> certifications) { this.certifications = certifications; }
+    public void setCertifications(List<Certification> certifications) {
+        this.certifications.clear();
+        if (certifications != null) {
+            certifications.forEach(cert -> cert.setUser(this));
+            this.certifications.addAll(certifications);
+        }
+    }
 
     public List<Achievement> getAchievements() { return achievements; }
-    public void setAchievements(List<Achievement> achievements) { this.achievements = achievements; }
+    public void setAchievements(List<Achievement> achievements) {
+        this.achievements.clear();
+        if (achievements != null) {
+            achievements.forEach(achievement -> achievement.setUser(this));
+            this.achievements.addAll(achievements);
+        }
+    }
 }
