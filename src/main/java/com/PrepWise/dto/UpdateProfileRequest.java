@@ -117,4 +117,3 @@ public class UpdateProfileRequest {
         public void setDate(String date) { this.date = date; }
     }
 }
-

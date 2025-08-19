@@ -180,6 +180,7 @@ public class UserService {
             response.put("githubUrl", user.getGithubUrl());
             response.put("linkedinUrl", user.getLinkedinUrl());
             response.put("portfolioLink", user.getPortfolioLink());
+            response.put("user_id", user.getId());
 
             // Domain distribution data
             if (user.getDomainDistribution() != null && !user.getDomainDistribution().trim().isEmpty()) {

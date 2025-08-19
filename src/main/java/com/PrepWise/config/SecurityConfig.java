@@ -45,9 +45,10 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/api/analyze-resume").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/analyze-text").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/parse-resume").permitAll()
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests
-
-                // All other requests require authentication
+                    .requestMatchers(HttpMethod.POST, "/api/learning-path/generate").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/learning-path/user/**").permitAll()
+                    .requestMatchers(HttpMethod.DELETE, "/api/learning-path/delete/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests// All other requests require authentication
                 .anyRequest().authenticated());
 
         return http.build();

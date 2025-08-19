@@ -121,6 +121,63 @@ public class GeminiService {
                 """ + resumeText;
     }
 
+    public String generateLearningPath(String skill, String level) {
+        String learningPrompt = createLearningPathPrompt(skill, level);
+        return askGemini(learningPrompt);
+    }
+
+    private String createLearningPathPrompt(String skill, String level) {
+        return """
+                You are an expert career and learning path generator.
+                I will provide you with:
+                1. The skill they want to learn or improve: %s
+                2. The target proficiency level they want to reach: %s
+                3. The preferred duration of the plan: %s
+
+                Your task is to generate a structured **learning path** for that skill in JSON format only.
+                Return your response in this exact JSON format (no markdown, no code blocks):
+                {
+                   "duration": "[short-term | medium-term | long-term]",
+                   "learningPath": [
+                     {
+                       "period": "[e.g., Week 1-2, Month 1, Phase 1]",
+                       "goal": "[Specific learning goal for this period]",
+                       "focusAreas": [
+                         "[Focus area 1]",
+                         "[Focus area 2]",
+                         "[Focus area 3]"
+                       ],
+                       "resources": [
+                         {
+                           "title": "[Resource title]",
+                           "url": "[Resource URL]",
+                           "type": "[course | documentation | video | article | tutorial]"
+                         }
+                       ],
+                       "tasks": [
+                         {
+                           "id": "[Unique task ID]",
+                           "description": "[Task description]",
+                           "completed": false,
+                           "estimatedHours": 0
+                         }
+                       ]
+                     }
+                   ]
+                 }
+                ### Rules:
+                - Always output valid JSON that matches this schema exactly.
+                - The `duration` must be based on the user's choice.
+                - Each `learningPath` entry should represent a clear step (e.g., Week 1, Month 1, Phase 1).
+                - Include at least 3–5 focus areas per period.
+                - Provide **realistic and widely recognized resources** (e.g., MDN, freeCodeCamp, Coursera, official docs, YouTube tutorials).
+                - Each period must have at least 3 tasks with unique IDs (`task-1`, `task-2`, etc.).
+                - Set all tasks' `completed` fields to `false`.
+                - Estimate task hours realistically depending on complexity.
+                - Do not include explanations, comments, or extra text outside of JSON.
+                """+ skill + level;
+    }
+
     private Map<String, Object> createGeminiRequest(String prompt) {
         Map<String, Object> request = new HashMap<>();
         Map<String, Object> content = new HashMap<>();
