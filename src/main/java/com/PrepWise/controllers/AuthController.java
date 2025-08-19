@@ -82,7 +82,7 @@ public class AuthController {
         return ResponseEntity.status(status).body(error);
     }
 
-    @PostMapping("/login")
+    @PostMapping("/sign-in")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         try {
             AuthResponse response = userService.loginUser(request);

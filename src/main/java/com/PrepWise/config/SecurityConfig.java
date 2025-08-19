@@ -37,7 +37,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints - Allow multiple variations
                 .requestMatchers(HttpMethod.POST, "/api/auth/sign-up").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/sign-in").permitAll()
                     .requestMatchers(HttpMethod.GET,"/api/auth/validate").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/get-user").permitAll()
                     .requestMatchers(HttpMethod.PUT, "/api/update-profile").permitAll()
