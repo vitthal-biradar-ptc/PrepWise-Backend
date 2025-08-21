@@ -8,7 +8,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/prepwise_db
     username: postgres
-    password: PgMarvel@241
+    password: 7756
     driver-class-name: org.postgresql.Driver
 
   jpa:
