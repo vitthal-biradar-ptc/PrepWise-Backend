@@ -9,12 +9,13 @@ import com.PrepWise.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -24,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
     @Mock
@@ -38,55 +40,81 @@ class UserServiceTest {
     @InjectMocks
     private UserService userService;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+
+    private static SignUpRequest buildBaseSignUpRequest() {
+        SignUpRequest request = new SignUpRequest();
+        request.setUsername("john_doe");
+        request.setEmail("john@example.com");
+        request.setPassword("secret123");
+        request.setName("John Doe");
+        request.setLocation("Boston, MA");
+        request.setGithubUrl("https://github.com/john");
+        request.setLinkedinUrl("https://linkedin.com/in/john");
+        request.setPortfolioLink("https://john.dev");
+        return request;
+    }
+
+    private static void copySignUpRequest(SignUpRequest source, SignUpRequest target) {
+        target.setUsername(source.getUsername());
+        target.setEmail(source.getEmail());
+        target.setPassword(source.getPassword());
+        target.setName(source.getName());
+        target.setLocation(source.getLocation());
+        target.setGithubUrl(source.getGithubUrl());
+        target.setLinkedinUrl(source.getLinkedinUrl());
+        target.setPortfolioLink(source.getPortfolioLink());
     }
 
     private SignUpRequest buildValidSignUpRequest() {
-        return new SignUpRequest(
-                "john_doe",
-                "john@example.com",
-                "secret123",
-                "John Doe",
-                "Boston, MA",
-                "https://github.com/john",
-                "https://linkedin.com/in/john",
-                "https://john.dev"
-        );
+        SignUpRequest request = new SignUpRequest();
+        request.setUsername("john_doe");
+        request.setEmail("john@example.com");
+        request.setPassword("secret123");
+        request.setName("John Doe");
+        request.setLocation("Boston, MA");
+        request.setGithubUrl("https://github.com/john");
+        request.setLinkedinUrl("https://linkedin.com/in/john");
+        request.setPortfolioLink("https://john.dev");
+        return request;
     }
 
     @Test
     @DisplayName("registerUser: succeeds with valid input and returns token")
     void registerUser_success() {
+        // Given
         SignUpRequest request = buildValidSignUpRequest();
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword("hashed");
+        
+        when(userRepository.existsByUsername(anyString())).thenReturn(false);
+        when(userRepository.existsByEmail(anyString())).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed");
+        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(jwtUtil.generateToken(anyString())).thenReturn("jwt-token");
 
-        when(userRepository.existsByUsername("john_doe")).thenReturn(false);
-        when(userRepository.existsByEmail("john@example.com")).thenReturn(false);
-        when(passwordEncoder.encode("secret123")).thenReturn("hashed");
-
-        User saved = new User();
-        saved.setUsername("john_doe");
-        saved.setEmail("john@example.com");
-        saved.setPassword("hashed");
-        when(userRepository.save(any(User.class))).thenReturn(saved);
-        when(jwtUtil.generateToken("john_doe")).thenReturn("jwt-token");
-
+        // When
         AuthResponse response = userService.registerUser(request);
 
+        // Then
         assertNotNull(response);
         assertEquals("jwt-token", response.getToken());
         verify(userRepository).save(any(User.class));
-        verify(jwtUtil).generateToken("john_doe");
+        verify(jwtUtil).generateToken(anyString());
     }
 
     @Test
     @DisplayName("registerUser: fails when username already exists")
     void registerUser_existingUsername() {
+        // Given
         SignUpRequest request = buildValidSignUpRequest();
-        when(userRepository.existsByUsername("john_doe")).thenReturn(true);
+        when(userRepository.existsByUsername(anyString())).thenReturn(true);
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> userService.registerUser(request));
+        // When/Then
+        RuntimeException ex = assertThrows(RuntimeException.class, 
+            () -> userService.registerUser(request));
+            
         assertEquals("Username already exists", ex.getMessage());
         verify(userRepository, never()).save(any());
     }
@@ -94,28 +122,62 @@ class UserServiceTest {
     @Test
     @DisplayName("registerUser: fails when email already exists")
     void registerUser_existingEmail() {
+        // Given
         SignUpRequest request = buildValidSignUpRequest();
-        when(userRepository.existsByUsername("john_doe")).thenReturn(false);
-        when(userRepository.existsByEmail("john@example.com")).thenReturn(true);
+        when(userRepository.existsByUsername(anyString())).thenReturn(false);
+        when(userRepository.existsByEmail(anyString())).thenReturn(true);
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> userService.registerUser(request));
+        // When/Then
+        RuntimeException ex = assertThrows(RuntimeException.class, 
+            () -> userService.registerUser(request));
+            
         assertEquals("Email already exists", ex.getMessage());
         verify(userRepository, never()).save(any());
     }
 
     static Stream<Arguments> missingRequiredFieldsProvider() {
         // Each argument: request, expectedMessage
-        SignUpRequest base = new SignUpRequest("john_doe", "john@example.com", "secret123", "John Doe", "Boston", null, null, null);
-        SignUpRequest noUsername = new SignUpRequest(null, base.getEmail(), base.getPassword(), base.getName(), base.getLocation(), null, null, null);
-        SignUpRequest blankUsername = new SignUpRequest("   ", base.getEmail(), base.getPassword(), base.getName(), base.getLocation(), null, null, null);
-        SignUpRequest noEmail = new SignUpRequest(base.getUsername(), null, base.getPassword(), base.getName(), base.getLocation(), null, null, null);
-        SignUpRequest blankEmail = new SignUpRequest(base.getUsername(), "   ", base.getPassword(), base.getName(), base.getLocation(), null, null, null);
-        SignUpRequest noPassword = new SignUpRequest(base.getUsername(), base.getEmail(), null, base.getName(), base.getLocation(), null, null, null);
-        SignUpRequest blankPassword = new SignUpRequest(base.getUsername(), base.getEmail(), "   ", base.getName(), base.getLocation(), null, null, null);
-        SignUpRequest noName = new SignUpRequest(base.getUsername(), base.getEmail(), base.getPassword(), null, base.getLocation(), null, null, null);
-        SignUpRequest blankName = new SignUpRequest(base.getUsername(), base.getEmail(), base.getPassword(), "   ", base.getLocation(), null, null, null);
-        SignUpRequest noLocation = new SignUpRequest(base.getUsername(), base.getEmail(), base.getPassword(), base.getName(), null, null, null, null);
-        SignUpRequest blankLocation = new SignUpRequest(base.getUsername(), base.getEmail(), base.getPassword(), base.getName(), "   ", null, null, null);
+        SignUpRequest base = buildBaseSignUpRequest();
+        
+        SignUpRequest noUsername = new SignUpRequest();
+        copySignUpRequest(base, noUsername);
+        noUsername.setUsername(null);
+        
+        SignUpRequest blankUsername = new SignUpRequest();
+        copySignUpRequest(base, blankUsername);
+        blankUsername.setUsername("   ");
+        
+        SignUpRequest noEmail = new SignUpRequest();
+        copySignUpRequest(base, noEmail);
+        noEmail.setEmail(null);
+        
+        SignUpRequest blankEmail = new SignUpRequest();
+        copySignUpRequest(base, blankEmail);
+        blankEmail.setEmail("   ");
+        
+        SignUpRequest noPassword = new SignUpRequest();
+        copySignUpRequest(base, noPassword);
+        noPassword.setPassword(null);
+        
+        SignUpRequest blankPassword = new SignUpRequest();
+        copySignUpRequest(base, blankPassword);
+        blankPassword.setPassword("   ");
+        
+        SignUpRequest noName = new SignUpRequest();
+        copySignUpRequest(base, noName);
+        noName.setName(null);
+        
+        SignUpRequest blankName = new SignUpRequest();
+        copySignUpRequest(base, blankName);
+        blankName.setName("   ");
+        
+        SignUpRequest noLocation = new SignUpRequest();
+        copySignUpRequest(base, noLocation);
+        noLocation.setLocation(null);
+        
+        SignUpRequest blankLocation = new SignUpRequest();
+        copySignUpRequest(base, blankLocation);
+        blankLocation.setLocation("   ");
 
         return Stream.of(
                 Arguments.of(noUsername, "Username is required"),

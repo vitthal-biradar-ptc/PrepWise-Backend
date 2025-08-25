@@ -22,20 +22,23 @@ class SignUpRequestValidationTest {
         validator = factory.getValidator();
     }
 
+    private SignUpRequest createValidSignUpRequest() {
+        SignUpRequest req = new SignUpRequest();
+        req.setUsername("john_doe");
+        req.setEmail("john@example.com");
+        req.setPassword("secret123");
+        req.setName("John Doe");
+        req.setLocation("Boston");
+        req.setGithubUrl("https://github.com/john");
+        req.setLinkedinUrl("https://linkedin.com/in/john");
+        req.setPortfolioLink("https://john.dev");
+        return req;
+    }
+
     @Test
     @DisplayName("Valid SignUpRequest passes bean validation")
     void validRequest_passes() {
-        SignUpRequest req = new SignUpRequest(
-                "john_doe",
-                "john@example.com",
-                "secret123",
-                "John Doe",
-                "Boston",
-                null,
-                null,
-                null
-        );
-
+        SignUpRequest req = createValidSignUpRequest();
         Set<ConstraintViolation<SignUpRequest>> violations = validator.validate(req);
         assertTrue(violations.isEmpty());
     }
@@ -43,16 +46,8 @@ class SignUpRequestValidationTest {
     @Test
     @DisplayName("Invalid email format fails validation")
     void invalidEmail_fails() {
-        SignUpRequest req = new SignUpRequest(
-                "john_doe",
-                "not-an-email",
-                "secret123",
-                "John Doe",
-                "Boston",
-                null,
-                null,
-                null
-        );
+        SignUpRequest req = createValidSignUpRequest();
+        req.setEmail("not-an-email");
 
         Set<ConstraintViolation<SignUpRequest>> violations = validator.validate(req);
         assertFalse(violations.isEmpty());
@@ -62,16 +57,8 @@ class SignUpRequestValidationTest {
     @Test
     @DisplayName("Password shorter than 6 characters fails validation")
     void weakPassword_fails() {
-        SignUpRequest req = new SignUpRequest(
-                "john_doe",
-                "john@example.com",
-                "123",
-                "John Doe",
-                "Boston",
-                null,
-                null,
-                null
-        );
+        SignUpRequest req = createValidSignUpRequest();
+        req.setPassword("123");
 
         Set<ConstraintViolation<SignUpRequest>> violations = validator.validate(req);
         assertFalse(violations.isEmpty());
@@ -81,16 +68,12 @@ class SignUpRequestValidationTest {
     @Test
     @DisplayName("Blank required fields fail validation")
     void blankFields_fail() {
-        SignUpRequest req = new SignUpRequest(
-                " ",
-                " ",
-                " ",
-                " ",
-                " ",
-                null,
-                null,
-                null
-        );
+        SignUpRequest req = new SignUpRequest();
+        req.setUsername(" ");
+        req.setEmail(" ");
+        req.setPassword(" ");
+        req.setName(" ");
+        req.setLocation(" ");
 
         Set<ConstraintViolation<SignUpRequest>> violations = validator.validate(req);
         assertFalse(violations.isEmpty());

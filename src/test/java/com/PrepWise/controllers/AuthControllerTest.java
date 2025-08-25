@@ -121,28 +121,31 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/auth/login - success returns AuthResponse")
+    @DisplayName("POST /api/auth/sign-in - success returns AuthResponse")
     @WithMockUser
     void login_success() throws Exception {
+        AuthResponse authResponse = new AuthResponse("jwt-token");
+        authResponse.setTokenType("Bearer");
+        
         Mockito.when(userService.loginUser(any(LoginRequest.class)))
-                .thenReturn(new AuthResponse("jwt-token"));
+                .thenReturn(authResponse);
 
         String body = "{\n" +
                 "  \"usernameOrEmail\": \"john@example.com\",\n" +
                 "  \"password\": \"secret123\"\n" +
                 "}";
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/auth/sign-in")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().is(HttpStatus.OK.value()))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token", is("jwt-token")))
                 .andExpect(jsonPath("$.tokenType", is("Bearer")));
     }
 
     @Test
-    @DisplayName("POST /api/auth/login - invalid credentials returns 401 with message")
+    @DisplayName("POST /api/auth/sign-in - invalid credentials returns 401 with message")
     @WithMockUser
     void login_failure_invalidCredentials() throws Exception {
         Mockito.when(userService.loginUser(any(LoginRequest.class)))
@@ -153,11 +156,11 @@ class AuthControllerTest {
                 "  \"password\": \"wrong\"\n" +
                 "}";
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/auth/sign-in")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().is(HttpStatus.UNAUTHORIZED.value()))
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error", is("Error logging in: Invalid credentials")));
     }
 }
