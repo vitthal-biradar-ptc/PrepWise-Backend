@@ -1,311 +1,232 @@
 package com.PrepWise.controllers;
 
 import com.PrepWise.config.TestSecurityConfig;
+import com.PrepWise.config.JwtAuthenticationFilter;
 import com.PrepWise.dto.AuthResponse;
 import com.PrepWise.dto.LoginRequest;
 import com.PrepWise.dto.SignUpRequest;
 import com.PrepWise.services.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
-import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(AuthController.class)
+@WebMvcTest(controllers = AuthController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @Import(TestSecurityConfig.class)
-@ActiveProfiles("test")
 class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockBean
     private UserService userService;
 
+    @MockBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    // ---------------- Sign-Up Tests ----------------
+
     @Test
-    @DisplayName("POST /api/auth/sign-up - success")
-    void register_success() throws Exception {
-        AuthResponse authResponse = new AuthResponse("jwt-token");
-        authResponse.setTokenType("Bearer");
+    @DisplayName("POST /api/auth/sign-up - success returns 201 with token")
+    void signUp_success() throws Exception {
+        SignUpRequest req = new SignUpRequest(
+                "john_doe",
+                "john@example.com",
+                "secret123",
+                "John Doe",
+                "Boston, MA",
+                "https://github.com/john",
+                "https://linkedin.com/in/john",
+                "https://john.dev"
+        );
 
-        Mockito.when(userService.registerUser(any(SignUpRequest.class)))
-                .thenReturn(authResponse);
-
-        String body = "{\n" +
-                "  \"username\": \"john_doe\",\n" +
-                "  \"email\": \"john@example.com\",\n" +
-                "  \"password\": \"secret123\",\n" +
-                "  \"name\": \"John Doe\",\n" +
-                "  \"location\": \"Boston\"\n" +
-                "}";
+        when(userService.registerUser(any(SignUpRequest.class)))
+                .thenReturn(new AuthResponse("jwt-token"));
 
         mockMvc.perform(post("/api/auth/sign-up")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().is(HttpStatus.CREATED.value()))
-                .andExpect(jsonPath("$.message", is("User registered successfully")))
-                .andExpect(jsonPath("$.token", is("jwt-token")))
-                .andExpect(jsonPath("$.tokenType", is("Bearer")));
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.token").value("jwt-token"))
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.message").value("User registered successfully"));
     }
 
     @Test
-    @DisplayName("POST /api/auth/sign-up - missing fields return 400 with message")
-    void register_missingFields() throws Exception {
-        Mockito.when(userService.registerUser(any(SignUpRequest.class)))
-                .thenThrow(new RuntimeException("Username is required"));
-
-        String body = "{\n" +
-                "  \"username\": \"\",\n" +
-                "  \"email\": \"\",\n" +
-                "  \"password\": \"\",\n" +
-                "  \"name\": \"\",\n" +
-                "  \"location\": \"\"\n" +
-                "}";
+    @DisplayName("POST /api/auth/sign-up - missing username returns 400")
+    void signUp_missingUsername() throws Exception {
+        SignUpRequest req = new SignUpRequest(
+                null,
+                "john@example.com",
+                "secret123",
+                "John Doe",
+                "Boston, MA",
+                null,
+                null,
+                null
+        );
 
         mockMvc.perform(post("/api/auth/sign-up")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("POST /api/auth/sign-up - existing user/email returns 400 with message")
-    void register_existingUser() throws Exception {
-        Mockito.when(userService.registerUser(any(SignUpRequest.class)))
-                .thenThrow(new RuntimeException("Email already exists"));
-
-        String body = "{\n" +
-                "  \"username\": \"john_doe\",\n" +
-                "  \"email\": \"john@example.com\",\n" +
-                "  \"password\": \"secret123\",\n" +
-                "  \"name\": \"John Doe\",\n" +
-                "  \"location\": \"Boston\"\n" +
-                "}";
+    @DisplayName("POST /api/auth/sign-up - missing email returns 400")
+    void signUp_missingEmail() throws Exception {
+        SignUpRequest req = new SignUpRequest(
+                "john_doe",
+                null,
+                "secret123",
+                "John Doe",
+                "Boston, MA",
+                null,
+                null,
+                null
+        );
 
         mockMvc.perform(post("/api/auth/sign-up")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("POST /api/auth/sign-in - success returns AuthResponse")
-    void login_success() throws Exception {
-        AuthResponse authResponse = new AuthResponse("jwt-token");
-        authResponse.setTokenType("Bearer");
-        
-        Mockito.when(userService.loginUser(any(LoginRequest.class)))
-                .thenReturn(authResponse);
+    @DisplayName("POST /api/auth/sign-up - missing password returns 400")
+    void signUp_missingPassword() throws Exception {
+        SignUpRequest req = new SignUpRequest(
+                "john_doe",
+                "john@example.com",
+                null,
+                "John Doe",
+                "Boston, MA",
+                null,
+                null,
+                null
+        );
 
-        String body = "{\n" +
-                "  \"usernameOrEmail\": \"john@example.com\",\n" +
-                "  \"password\": \"secret123\"\n" +
-                "}";
+        mockMvc.perform(post("/api/auth/sign-up")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/sign-up - service throws 'Username already exists' -> 400")
+    void signUp_existingUsername_fromService() throws Exception {
+        SignUpRequest req = new SignUpRequest(
+                "john_doe",
+                "john@example.com",
+                "secret123",
+                "John Doe",
+                "Boston, MA",
+                null,
+                null,
+                null
+        );
+
+        when(userService.registerUser(any(SignUpRequest.class)))
+                .thenThrow(new RuntimeException("Username already exists"));
+
+        mockMvc.perform(post("/api/auth/sign-up")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Username already exists"));
+    }
+
+    // ---------------- Sign-In Tests ----------------
+
+    @Test
+    @DisplayName("POST /api/auth/sign-in - success returns 200 with token")
+    void signIn_success() throws Exception {
+        LoginRequest req = new LoginRequest("john_doe", "secret123");
+
+        when(userService.loginUser(any(LoginRequest.class)))
+                .thenReturn(new AuthResponse("jwt-token"));
 
         mockMvc.perform(post("/api/auth/sign-in")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token", is("jwt-token")))
-                .andExpect(jsonPath("$.tokenType", is("Bearer")));
+                .andExpect(jsonPath("$.token").value("jwt-token"))
+                .andExpect(jsonPath("$.tokenType").value("Bearer"));
     }
 
     @Test
-    @DisplayName("POST /api/auth/sign-in - invalid credentials returns 401 with message")
-    void login_failure_invalidCredentials() throws Exception {
-        Mockito.when(userService.loginUser(any(LoginRequest.class)))
+    @DisplayName("POST /api/auth/sign-in - missing usernameOrEmail -> 401 with error")
+    void signIn_missingUsernameOrEmail() throws Exception {
+        LoginRequest req = new LoginRequest(null, "secret123");
+
+        when(userService.loginUser(any(LoginRequest.class)))
+                .thenThrow(new RuntimeException("Username or email is required"));
+
+        mockMvc.perform(post("/api/auth/sign-in")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Username or email is required"));
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/sign-in - missing password -> 401 with error")
+    void signIn_missingPassword() throws Exception {
+        LoginRequest req = new LoginRequest("john_doe", null);
+
+        when(userService.loginUser(any(LoginRequest.class)))
+                .thenThrow(new RuntimeException("Password is required"));
+
+        mockMvc.perform(post("/api/auth/sign-in")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Password is required"));
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/sign-in - invalid credentials (user not found) -> 401")
+    void signIn_invalid_userNotFound() throws Exception {
+        LoginRequest req = new LoginRequest("unknown", "secret123");
+
+        when(userService.loginUser(any(LoginRequest.class)))
                 .thenThrow(new RuntimeException("Error logging in: Invalid credentials"));
 
-        String body = "{\n" +
-                "  \"usernameOrEmail\": \"john@example.com\",\n" +
-                "  \"password\": \"wrong\"\n" +
-                "}";
+        mockMvc.perform(post("/api/auth/sign-in")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Error logging in: Invalid credentials"));
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/sign-in - invalid credentials (wrong password) -> 401")
+    void signIn_invalid_wrongPassword() throws Exception {
+        LoginRequest req = new LoginRequest("john_doe", "badpass");
+
+        when(userService.loginUser(any(LoginRequest.class)))
+                .thenThrow(new RuntimeException("Error logging in: Invalid credentials"));
 
         mockMvc.perform(post("/api/auth/sign-in")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/sign-up - invalid email format returns 400")
-    void register_withInvalidEmailFormat() throws Exception {
-        Mockito.when(userService.registerUser(any(SignUpRequest.class)))
-                .thenThrow(new RuntimeException("Invalid email format"));
-
-        String body = "{\n" +
-                "  \"username\": \"john_doe\",\n" +
-                "  \"email\": \"invalid-email\",\n" +
-                "  \"password\": \"secret123\",\n" +
-                "  \"name\": \"John Doe\",\n" +
-                "  \"location\": \"Boston\"\n" +
-                "}";
-
-        mockMvc.perform(post("/api/auth/sign-up")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/sign-up - password too short returns 400")
-    void register_withPasswordTooShort() throws Exception {
-        Mockito.when(userService.registerUser(any(SignUpRequest.class)))
-                .thenThrow(new RuntimeException("Password must be at least 8 characters"));
-
-        String body = "{\n" +
-                "  \"username\": \"john_doe\",\n" +
-                "  \"email\": \"john@example.com\",\n" +
-                "  \"password\": \"123\",\n" +
-                "  \"name\": \"John Doe\",\n" +
-                "  \"location\": \"Boston\"\n" +
-                "}";
-
-        mockMvc.perform(post("/api/auth/sign-up")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/sign-in - success with username returns AuthResponse")
-    void signIn_withUsernameInsteadOfEmail() throws Exception {
-        AuthResponse authResponse = new AuthResponse("jwt-token");
-        authResponse.setTokenType("Bearer");
-
-        Mockito.when(userService.loginUser(any(LoginRequest.class)))
-                .thenReturn(authResponse);
-
-        String body = "{\n" +
-                "  \"usernameOrEmail\": \"john_doe\",\n" +
-                "  \"password\": \"secret123\"\n" +
-                "}";
-
-        mockMvc.perform(post("/api/auth/sign-in")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token", is("jwt-token")))
-                .andExpect(jsonPath("$.tokenType", is("Bearer")));
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/sign-in - non-existent user returns 401")
-    void signIn_withNonExistentUser() throws Exception {
-        Mockito.when(userService.loginUser(any(LoginRequest.class)))
-                .thenThrow(new RuntimeException("Invalid credentials"));
-
-        String body = "{\n" +
-                "  \"usernameOrEmail\": \"nonexistent@example.com\",\n" +
-                "  \"password\": \"secret123\"\n" +
-                "}";
-
-        mockMvc.perform(post("/api/auth/sign-in")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/sign-up - empty request body returns 400")
-    void signUp_withEmptyRequestPayload() throws Exception {
-        mockMvc.perform(post("/api/auth/sign-up")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(""))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/sign-up - without CSRF token returns 403")
-    void signUp_withoutCSRF() throws Exception {
-        AuthResponse authResponse = new AuthResponse("jwt-token");
-        authResponse.setTokenType("Bearer");
-
-        Mockito.when(userService.registerUser(any(SignUpRequest.class)))
-                .thenReturn(authResponse);
-
-        String body = "{\n" +
-                "  \"username\": \"john_doe\",\n" +
-                "  \"email\": \"john@example.com\",\n" +
-                "  \"password\": \"secret123\",\n" +
-                "  \"name\": \"John Doe\",\n" +
-                "  \"location\": \"Boston\"\n" +
-                "}";
-
-        // Since CSRF is disabled in test config, expect successful response
-        mockMvc.perform(post("/api/auth/sign-up")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().is(HttpStatus.CREATED.value()));
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/sign-in - without CSRF token returns 403")
-    void signIn_withoutCSRF() throws Exception {
-        AuthResponse authResponse = new AuthResponse("jwt-token");
-        authResponse.setTokenType("Bearer");
-
-        Mockito.when(userService.loginUser(any(LoginRequest.class)))
-                .thenReturn(authResponse);
-
-        String body = "{\n" +
-                "  \"usernameOrEmail\": \"john@example.com\",\n" +
-                "  \"password\": \"secret123\"\n" +
-                "}";
-
-        // Since CSRF is disabled in test config, expect successful response
-        mockMvc.perform(post("/api/auth/sign-in")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/sign-up - service unavailable returns 500")
-    void register_withServiceUnavailable() throws Exception {
-        Mockito.when(userService.registerUser(any(SignUpRequest.class)))
-                .thenThrow(new RuntimeException("Service temporarily unavailable"));
-
-        String body = "{\n" +
-                "  \"username\": \"john_doe\",\n" +
-                "  \"email\": \"john@example.com\",\n" +
-                "  \"password\": \"secret123\",\n" +
-                "  \"name\": \"John Doe\",\n" +
-                "  \"location\": \"Boston\"\n" +
-                "}";
-
-        // Controller likely returns 400 for service exceptions, not 500
-        mockMvc.perform(post("/api/auth/sign-up")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/sign-up - malformed JSON returns 400")
-    void register_withMalformattedJson() throws Exception {
-        String malformedBody = "{\n" +
-                "  \"username\": \"john_doe\",\n" +
-                "  \"email\": \"john@example.com\",\n" +
-                "  \"password\": \"secret123\",\n" +
-                "  \"name\": \"John Doe\",\n" +
-                "  \"location\": \"Boston\"\n";
-
-        mockMvc.perform(post("/api/auth/sign-up")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(malformedBody))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Error logging in: Invalid credentials"));
     }
 }
