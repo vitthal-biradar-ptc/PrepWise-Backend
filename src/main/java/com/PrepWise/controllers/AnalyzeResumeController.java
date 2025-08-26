@@ -1,6 +1,5 @@
 package com.PrepWise.controllers;
 
-
 import com.PrepWise.config.JwtUtil;
 import com.PrepWise.dto.ResumeAnalysisRequest;
 import com.PrepWise.dto.ResumeAnalysisResponse;
@@ -139,6 +138,4 @@ public class AnalyzeResumeController {
             return fallbackResponse;
         }
     }
-
-
 }

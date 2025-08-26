@@ -2,7 +2,7 @@ package com.PrepWise.services;
 
 import com.PrepWise.dto.InterviewRequest;
 import com.PrepWise.entities.Interview;
-import com.PrepWise.entities.QuestionAnalysis;
+import com.PrepWise.entities.TranscriptEntry;
 import com.PrepWise.entities.User;
 import com.PrepWise.repositories.InterviewRepository;
 import com.PrepWise.repositories.UserRepository;
@@ -24,34 +24,51 @@ public class InterviewService {
 
     @Transactional
     public Interview saveInterview(InterviewRequest request) {
-        User user = userRepository.findById(request.getUserId())
+        User user = userRepository.findById(Long.parseLong(request.getUserId()))
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
 
         Interview interview = new Interview();
         interview.setUser(user);
-        interview.setOverallSummary(request.getOverallSummary());
-        interview.setStrengths(request.getStrengths());
-        interview.setAreasForImprovement(request.getAreasForImprovement());
+        interview.setRole(request.getRole());
+        interview.setLevel(request.getLevel());
+        interview.setStartTime(request.getStartTime());
+        interview.setEndTime(request.getEndTime());
+        interview.setDuration(request.getDuration());
+        interview.setOverallScore(request.getOverallScore());
 
-        // Convert DTO to entities
-        List<QuestionAnalysis> questionAnalyses = request.getQuestionByQuestionAnalysis().stream()
-                .map(dto -> {
-                    QuestionAnalysis qa = new QuestionAnalysis();
-                    qa.setQuestion(dto.getQuestion());
-                    qa.setUserAnswer(dto.getUserAnswer());
-                    qa.setFeedback(dto.getFeedback());
-                    qa.setScore(dto.getScore());
-                    qa.setInterview(interview);
-                    return qa;
-                }).collect(Collectors.toList());
+        // Map feedback
+        if (request.getFeedback() != null) {
+            interview.setStrengths(request.getFeedback().getStrengths());
+            interview.setAreasForImprovement(request.getFeedback().getWeaknesses());
+            interview.setRecommendations(request.getFeedback().getRecommendations());
+        }
 
-        interview.setQuestionByQuestionAnalysis(questionAnalyses);
+        // Convert transcript DTOs to entities
+        if (request.getTranscript() != null) {
+            List<TranscriptEntry> transcriptEntries = request.getTranscript().stream()
+                    .map(dto -> {
+                        TranscriptEntry entry = new TranscriptEntry();
+                        entry.setSpeaker(dto.getSpeaker());
+                        entry.setText(dto.getText());
+                        entry.setTimestamp(dto.getTimestamp());
+                        entry.setInterview(interview);
+                        return entry;
+                    }).collect(Collectors.toList());
+            interview.setTranscript(transcriptEntries);
+        }
 
-        return interviewRepository.save(interview);
+        Interview savedInterview = interviewRepository.save(interview);
+
+        savedInterview.setUser(null);
+        return savedInterview;
     }
 
     public List<Interview> getInterviewsByUserId(Long userId) {
-        return interviewRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        List<Interview> interviews = interviewRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        interviews.forEach(interview -> interview.setUser(null));
+        return interviews;
     }
 
     public Interview getInterviewById(Long id) {

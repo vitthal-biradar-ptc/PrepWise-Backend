@@ -55,9 +55,8 @@ public class ProfileController {
             errorResponse.put("message", "Internal server error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
-
     }
-    @GetMapping("/get-user/{userId}")
+    @GetMapping("/get-user")
     public ResponseEntity<?> getUser(@RequestHeader("Authorization") String token) {
         try {
             if (token == null || !token.startsWith("Bearer ")) {
@@ -80,4 +79,3 @@ public class ProfileController {
         }
     }
 }
-

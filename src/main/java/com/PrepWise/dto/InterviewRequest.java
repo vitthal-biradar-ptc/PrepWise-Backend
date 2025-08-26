@@ -1,50 +1,79 @@
 package com.PrepWise.dto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class InterviewRequest {
 
-    private Long userId;
-    private String overallSummary;
-    private List<String> strengths;
-    private List<String> areasForImprovement;
-    private List<QuestionAnalysisDto> questionByQuestionAnalysis;
+    private String userId;
+    private String role;
+    private String level;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+    private Integer duration;
+    private List<TranscriptDto> transcript;
+    private FeedbackDto feedback;
+    private Integer overallScore;
 
     public InterviewRequest() {}
 
     // Getters and Setters
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
-    public String getOverallSummary() { return overallSummary; }
-    public void setOverallSummary(String overallSummary) { this.overallSummary = overallSummary; }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 
-    public List<String> getStrengths() { return strengths; }
-    public void setStrengths(List<String> strengths) { this.strengths = strengths; }
+    public String getLevel() { return level; }
+    public void setLevel(String level) { this.level = level; }
 
-    public List<String> getAreasForImprovement() { return areasForImprovement; }
-    public void setAreasForImprovement(List<String> areasForImprovement) { this.areasForImprovement = areasForImprovement; }
+    public LocalDateTime getStartTime() { return startTime; }
+    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
 
-    public List<QuestionAnalysisDto> getQuestionByQuestionAnalysis() { return questionByQuestionAnalysis; }
-    public void setQuestionByQuestionAnalysis(List<QuestionAnalysisDto> questionByQuestionAnalysis) { this.questionByQuestionAnalysis = questionByQuestionAnalysis; }
+    public LocalDateTime getEndTime() { return endTime; }
+    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
 
-    public static class QuestionAnalysisDto {
-        private String question;
-        private String userAnswer;
-        private String feedback;
-        private Integer score;
+    public Integer getDuration() { return duration; }
+    public void setDuration(Integer duration) { this.duration = duration; }
+
+    public List<TranscriptDto> getTranscript() { return transcript; }
+    public void setTranscript(List<TranscriptDto> transcript) { this.transcript = transcript; }
+
+    public FeedbackDto getFeedback() { return feedback; }
+    public void setFeedback(FeedbackDto feedback) { this.feedback = feedback; }
+
+    public Integer getOverallScore() { return overallScore; }
+    public void setOverallScore(Integer overallScore) { this.overallScore = overallScore; }
+
+    public static class TranscriptDto {
+        private String speaker;
+        private String text;
+        private LocalDateTime timestamp;
 
         // Getters and Setters
-        public String getQuestion() { return question; }
-        public void setQuestion(String question) { this.question = question; }
+        public String getSpeaker() { return speaker; }
+        public void setSpeaker(String speaker) { this.speaker = speaker; }
 
-        public String getUserAnswer() { return userAnswer; }
-        public void setUserAnswer(String userAnswer) { this.userAnswer = userAnswer; }
+        public String getText() { return text; }
+        public void setText(String text) { this.text = text; }
 
-        public String getFeedback() { return feedback; }
-        public void setFeedback(String feedback) { this.feedback = feedback; }
+        public LocalDateTime getTimestamp() { return timestamp; }
+        public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+    }
 
-        public Integer getScore() { return score; }
-        public void setScore(Integer score) { this.score = score; }
+    public static class FeedbackDto {
+        private List<String> strengths;
+        private List<String> weaknesses;
+        private String recommendations;
+
+        // Getters and Setters
+        public List<String> getStrengths() { return strengths; }
+        public void setStrengths(List<String> strengths) { this.strengths = strengths; }
+
+        public List<String> getWeaknesses() { return weaknesses; }
+        public void setWeaknesses(List<String> weaknesses) { this.weaknesses = weaknesses; }
+
+        public String getRecommendations() { return recommendations; }
+        public void setRecommendations(String recommendations) { this.recommendations = recommendations; }
     }
 }
