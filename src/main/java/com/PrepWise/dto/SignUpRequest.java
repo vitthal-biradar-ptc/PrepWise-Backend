@@ -3,7 +3,6 @@ package com.PrepWise.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import org.springframework.web.multipart.MultipartFile;
 
 public class SignUpRequest {
 
@@ -27,21 +26,20 @@ public class SignUpRequest {
     @Size(min = 2, max = 200, message = "Location must be between 2 and 200 characters")
     private String location;
 
-    private MultipartFile profilePhoto;
     private String githubUrl;
     private String linkedinUrl;
     private String portfolioLink;
 
     public SignUpRequest() {}
+    public SignUpRequest(String johnDoe, String mail, String secret123, String john_doe, String boston, Object o, Object object, Object o1) {}
 
     public SignUpRequest(String username, String email, String password, String name, String location,
-                         MultipartFile profilePhoto, String githubUrl, String linkedinUrl, String portfolioLink) {
+                        String githubUrl, String linkedinUrl, String portfolioLink) {
         this.username = username;
         this.email = email;
         this.password = password;
         this.name = name;
         this.location = location;
-        this.profilePhoto = profilePhoto;
         this.githubUrl = githubUrl;
         this.linkedinUrl = linkedinUrl;
         this.portfolioLink = portfolioLink;
@@ -85,14 +83,6 @@ public class SignUpRequest {
 
     public void setLocation(String location) {
         this.location = location;
-    }
-
-    public MultipartFile getProfilePhoto() {
-        return profilePhoto;
-    }
-
-    public void setProfilePhoto(MultipartFile profilePhoto) {
-        this.profilePhoto = profilePhoto;
     }
 
     public String getGithubUrl() {

@@ -37,7 +37,6 @@ public class LearningPathService {
                 request.getSkill(),
                 request.getLevel()
         );
-        System.out.println("Gemini response: " + geminiResponse);
 
         // Parse and store learning path
         LearningPath learningPath = parseLearningPathResponse(geminiResponse, request, user);

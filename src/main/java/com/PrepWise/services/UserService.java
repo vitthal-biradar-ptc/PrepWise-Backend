@@ -10,6 +10,8 @@ import com.PrepWise.entities.Certification;
 import com.PrepWise.entities.Skill;
 import com.PrepWise.repositories.UserRepository;
 import com.PrepWise.config.JwtUtil;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;

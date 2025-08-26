@@ -57,7 +57,7 @@ public class ProfileController {
         }
 
     }
-    @GetMapping("/get-user")
+    @GetMapping("/get-user/{userId}")
     public ResponseEntity<?> getUser(@RequestHeader("Authorization") String token) {
         try {
             if (token == null || !token.startsWith("Bearer ")) {
