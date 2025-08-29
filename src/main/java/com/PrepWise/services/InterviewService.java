@@ -24,7 +24,7 @@ public class InterviewService {
 
     @Transactional
     public Interview saveInterview(InterviewRequest request) {
-        User user = userRepository.findById(Long.parseLong(request.getUserId()))
+        User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
 
         Interview interview = new Interview();
@@ -38,6 +38,7 @@ public class InterviewService {
 
         // Map feedback
         if (request.getFeedback() != null) {
+            interview.setOverallSummary(request.getFeedback().getOverallSummary());
             interview.setStrengths(request.getFeedback().getStrengths());
             interview.setAreasForImprovement(request.getFeedback().getWeaknesses());
             interview.setRecommendations(request.getFeedback().getRecommendations());

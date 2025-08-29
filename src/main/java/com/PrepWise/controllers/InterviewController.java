@@ -29,7 +29,7 @@ public class InterviewController {
         return ResponseEntity.ok(interviews);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/user/{userId}/report/{id}")
     public ResponseEntity<Interview> getInterview(@PathVariable Long id) {
         Interview interview = interviewService.getInterviewById(id);
         return ResponseEntity.ok(interview);

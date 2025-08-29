@@ -5,7 +5,7 @@ import java.util.List;
 
 public class InterviewRequest {
 
-    private String userId;
+    private Long userId;
     private String role;
     private String level;
     private LocalDateTime startTime;
@@ -18,8 +18,8 @@ public class InterviewRequest {
     public InterviewRequest() {}
 
     // Getters and Setters
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
@@ -62,11 +62,16 @@ public class InterviewRequest {
     }
 
     public static class FeedbackDto {
+        private String overallSummary;
         private List<String> strengths;
         private List<String> weaknesses;
         private String recommendations;
 
         // Getters and Setters
+
+        public String getOverallSummary() { return overallSummary; }
+        public void setOverallSummary(String overallSummary) { this.overallSummary = overallSummary; };
+
         public List<String> getStrengths() { return strengths; }
         public void setStrengths(List<String> strengths) { this.strengths = strengths; }
 
@@ -75,5 +80,7 @@ public class InterviewRequest {
 
         public String getRecommendations() { return recommendations; }
         public void setRecommendations(String recommendations) { this.recommendations = recommendations; }
+
+
     }
 }

@@ -5,6 +5,7 @@ import com.PrepWise.entities.LearningPath;
 import com.PrepWise.services.LearningPathService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +18,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class LearningPathController {
 
-    private final LearningPathService learningPathService;
+    @Autowired
+    private LearningPathService learningPathService;
 
     @PostMapping("/generate")
     public ResponseEntity<?> generateLearningPath(@Valid @RequestBody LearningPathRequest request) {
